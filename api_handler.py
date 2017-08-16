@@ -1,14 +1,15 @@
-from bottle import redirect, request, route, run, template, debug
+from bottle import route, run, template, debug
 import json
 from pymongo import MongoClient
 from collections import OrderedDict
+
 client = MongoClient('localhost', 27017)
 db = client.paranuara
 
 
 @route('/')
 def index():
-    return template('<b>Welcome to the {{name}} API</b>!', name='Paranuara')
+    return template('<h2><b>Welcome to the {{name}} API</b></h2>.', name='Paranuara')
 
 
 @route('/company/<cname>')  # <cname:re:[\w ]+>
@@ -21,18 +22,17 @@ def get_companies(cname):
     if not cname:
         message = 'Missing mandatory field : Company name'
     else:
-        emp_company = db.companies.find({'company': cname})
-        if emp_company.count() < 1:
-            message = 'No employee found in the company \'' + cname + '\''
+        emp_company = db.companies.find_one({'company': cname}, {'index': 1})
+        if not emp_company:
+            message = 'No company found with the name \'' + cname + '\''
         else:
-            emp_index_list = [emp['index'] for emp in emp_company]
-            employees = db.people.find({'index': {'$in': emp_index_list}})
+            # emp_index_list = [emp['index'] for emp in emp_company]
+            employees = db.people.find({'company_id': emp_company['index']}, {'name': 1, 'age': 1, 'index': 1,
+                                                                              'email': 1, 'phone': 1, '_id': 0})
             if employees.count() < 1:
-                message = 'Employee details not found in the database.'
-            elif employees.count() == 1:
-                message = json.dumps((employees.next()))
+                message = 'No employee found in the company \'' + cname + '\''
             else:
-                message = str(list(employees))
+                message = str(json.dumps(list(employees)))
     return template('{{message}}', message=message)
 
 
@@ -51,21 +51,25 @@ def get_friends(p1, p2):
     elif not (p1.isdigit() and p2.isdigit()):
         message = 'Person1 and Person 2 indices should be integer.'
     else:
-        a = db.people.find({'index': {'$in': [int(p1), int(p2)]}},
+        twop = db.people.find({'index': {'$in': [int(p1), int(p2)]}},
                            {'name': 1, 'age': 1, 'address': 1, 'phone': 1, 'friends': 1, '_id': 0})
-        if a.count() == 0:
+        if twop.count() == 0:
             message = 'Details for both the people not found. Please pass correct index.'
-        elif a.count() == 1:
+        elif twop.count() == 1:
             # not_found = p2 if a[0]['index'] == p1 else p1
             message = 'Details for one of the person not found. Please pass correct index.'
         else:
-            a_friends = set([friend['index'] for friend in a[0]['friends']])
-            b_friends = set([friend['index'] for friend in a[1]['friends']])
+            a_friends = set([friend['index'] for friend in twop[0]['friends']])
+            b_friends = set([friend['index'] for friend in twop[1]['friends']])
             common = list(a_friends & b_friends)
-            message_list = list(a)
-            b = db.people.find({'eyeColor': 'brown', 'has_died': False, 'index': {'$in': common}})
-            message_list.append(list(b))
-            message = str(message_list)
+            message = ''
+            for people in twop:
+                del people['friends']
+                message += 'Person : ' + json.dumps(people)
+            # message_list = list(twop)
+            commonf = db.people.find({'eyeColor': 'brown', 'has_died': False, 'index': {'$in': common}}, {'name': 1,
+                                                      'age': 1, 'index': 1, 'email': 1, 'phone': 1, '_id': 0})
+            message += ' Common alive brown-eyed friends : ' + str(json.dumps(list(commonf)))
     return template('{{message}}', message=message)
 
 
@@ -101,6 +105,7 @@ def get_food_liking(index):
             message = json.dumps(message_dict)
     return template('{{message}}', message=message)
 
-debug(True)
+
+# debug(True)
 if __name__ == '__main__':
     run(host='localhost', port=9090)
