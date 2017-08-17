@@ -109,4 +109,4 @@ def get_food_liking(index):
 
 # debug(True)
 if __name__ == '__main__':
-    run(host='localhost', port=9090, reloader=True)
+    run(host='localhost', port=9090)
