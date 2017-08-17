@@ -23,19 +23,25 @@ mongoimport --db paranuara --collection company --file company.json --jsonArray
 ```
 ### Usage Example
 
+First start the server(on port 9090) using the following:
+```
+python api_handler.py
+```
+
 Get all the employees/people of a company (specified by company name)
 ```
 http://localhost:9090/company/MAINELAND
 ```
+
 Get common friends of two people (specified by indices)
 ```
 http://localhost:9090/people/2/4
 ```
+
 Get fruits and vegetables liking of a person (specified by index)
 ```
 http://localhost:9090/choice/8
 ```
-Note: Web server is running on port 9090
 
 ### Sample JSON (used in the setup)
 
