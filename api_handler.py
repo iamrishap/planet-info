@@ -9,7 +9,8 @@ db = client.paranuara
 
 @route('/')
 def index():
-    return template('<h2><b>Welcome to the {{name}} API</b></h2>.', name='Paranuara')
+    return template('<html><body><div><br><br><h2><b>Welcome to the {{name}} API</b></h2></div></body></html>.',
+                    name='Paranuara')
 
 
 @route('/company/<cname>')  # <cname:re:[\w ]+>
@@ -67,8 +68,8 @@ def get_friends(p1, p2):
                 del people['friends']
                 message += 'Person : ' + json.dumps(people)
             # message_list = list(twop)
-            commonf = db.people.find({'eyeColor': 'brown', 'has_died': False, 'index': {'$in': common}}, {'name': 1,
-                                                      'age': 1, 'index': 1, 'email': 1, 'phone': 1, '_id': 0})
+            commonf = db.people.find({'eyeColor': 'brown', 'has_died': False, 'index': {'$in': common}},
+                                     {'name': 1, 'age': 1, 'index': 1, 'email': 1, 'phone': 1, '_id': 0})
             message += ' Common alive brown-eyed friends : ' + str(json.dumps(list(commonf)))
     return template('{{message}}', message=message)
 
@@ -108,4 +109,4 @@ def get_food_liking(index):
 
 # debug(True)
 if __name__ == '__main__':
-    run(host='localhost', port=9090)
+    run(host='localhost', port=9090, reloader=True)
